@@ -5,10 +5,6 @@ use actix_web::{get, web, HttpResponse, Responder,};
 pub async fn claim(address: web::Path<String>) -> impl Responder{
     let address = address.into_inner();
     let claim = tokio::task::spawn_blocking(||blockchainClaim(address)).await;
-    // let claim = match claim {
-    //     Ok(success) => Ok(success),
-    //     Err(error) => Err(error)
-    // };
     if claim.is_err() {
         if let Err(error) = claim{return HttpResponse::Forbidden().body(error.to_string())}
     }
