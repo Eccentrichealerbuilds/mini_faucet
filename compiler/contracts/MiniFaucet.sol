@@ -11,7 +11,7 @@ contract MiniFaucet {
         if (list_of_claimers[_to] != 0) {
             require(block.timestamp > user_next_claim, "you can only claim once every 24hrs");   
         }
-        (bool sent,) = _to.call{value: 1e15}("");
+        (bool sent,) = _to.call{value: 2e15}("");
         require(sent, "Failed to send Ether");
         list_of_claimers[_to] = block.timestamp + 1 days;
     }
