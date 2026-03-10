@@ -1,11 +1,13 @@
-use alloy::{primitives::{Uint,Address, U256, address}, providers::ProviderBuilder, sol, sol_types::{Revert}};
+use alloy::{primitives::{Address, address}, providers::ProviderBuilder, sol, sol_types::{Revert}};
 use actix_web::{Responder, web};
 use std::{env};
-use serde_json::Value;
+use serde_json::{Value, json};
 use serde::{Serialize};
 use dotenv::dotenv;
 use chrono::{DateTime, Utc};
 use crate::blockchain::custom::MyResponse;
+
+type MyResponseReturn = MyResponse<Value,Value,Value>;
 
 
 sol! { 
@@ -28,45 +30,41 @@ pub async fn get_faucet_balance() -> impl Responder{
     if let Err(e) = get_faucet_balance {
         let error = e.as_decoded_error::<Revert>();
         let error = error.map(|r|format!("{r}")).unwrap_or(format!("server unable to connect to blockchain"));
-        let error = MyResponse::<Uint<256, 4>,String,Value>::Error(error);
-        return web::Json(error);
+        return MyResponse::<Value,Value,Value>::Error(json!({"status" : "error", "message" : error}));
     } 
     let success = get_faucet_balance.ok().unwrap();
-    let success = MyResponse::Success(success);
-    web::Json(success)
-
-
-
+    let success = success.to::<u128>() as f64 / 1e18;
+    let success = format!("{}", success);
+    MyResponse::Success(json!({
+        "status" : "success", "message" : success
+    }))
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct Resulter<T> (T);
 
-impl Resulter<String>{
-    pub fn display(&self) -> String{
-        format!("{}", self.0)
-    }
-}
-#[tokio::main]
-pub async fn get_wallet_balance(address: String) -> Resulter<String> {
+// #[tokio::main]
+pub async fn get_wallet_balance(address: String) -> MyResponseReturn {
     dotenv().ok();
     let recipient = address.parse::<Address>();
     if recipient.is_err() {
-        if let Err(e) = recipient {return Resulter(e.to_string())}
+        if let Err(e) = recipient {return MyResponse::IncorrectAddr(json!({"status" : "error", "message" : e.to_string()}))}
     }
     let recipient = recipient.unwrap();
     let provider = ProviderBuilder::new().connect(&env::var("rpc_url").unwrap()).await;
     let wallet_balance = address!("0x3AC5a5f60753bbfaD93B668A0bEC5c8fA0E647be");
     let wallet_balance_instance = MiniFaucet::new(wallet_balance, provider.unwrap());
-    let get_wallet_balance = wallet_balance_instance.getBalance(recipient).call().await;
-    match get_wallet_balance {
-        result => {
-            let wallet_balance = U256::from(result.unwrap()).to::<u128>();
-            let wallet_balance = wallet_balance as f64 / 1e18;
-            Resulter(wallet_balance.to_string())
-        }
+    let balance_result = wallet_balance_instance.getBalance(recipient).call().await;
+    
+    if let Err(e) = balance_result {
+        let error = e.as_decoded_error::<Revert>().map(|r|r.reason).unwrap_or(format!("server unable to connect to blockchain"));
+        return MyResponse::Error(json!({
+            "status" : "error", "message" : error
+        }))
     }
-    // get_wallet_balance
+
+    let balance = balance_result.unwrap().to::<u128>();
+    MyResponse::Success(json!({
+        "status" : "success", "message" : balance
+    }))
 }
 
 #[derive(Serialize)]
