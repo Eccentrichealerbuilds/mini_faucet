@@ -1,7 +1,9 @@
-use actix_web::{Responder, web};
+use actix_web::Responder;
 use alloy::{sol_types::Revert,primitives::{Address}, providers::ProviderBuilder, signers::local::PrivateKeySigner, sol };
 use std::{env};
-use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use crate::blockchain::custom::MyResponse;
+// use crate::blockchain::custom::Status;
 use dotenv::dotenv;
 
 sol! { 
@@ -11,9 +13,6 @@ sol! {
           function  claim(address _to) public payable;
     } 
 }
-
-#[derive(Deserialize, Serialize)]
-struct Status{message: String, status: String}
 
 #[tokio::main]
 pub async fn claim(address: String) -> impl Responder{
@@ -29,24 +28,32 @@ pub async fn claim(address: String) -> impl Responder{
     let recipient = address.parse::<Address>();
     if recipient.is_err(){
         if let Err(error) = recipient{
-            return web::Json(Status{message: error.to_string(), status: "address_error".to_string()});}
+            return MyResponse::<Value, Value, Value>::IncorrectAddr(json!({
+                "status" : "error",
+                "message" : error.to_string(),
+            }) );}
     }
+
     let recipient = recipient.unwrap();
     let contract = env::var("CONTRACT_ADDRESS").unwrap();
     let claim = contract.parse::<Address>().unwrap();
     let claim_instance = MiniFaucet::new(claim, provider);
     let claimer = claim_instance.claim(recipient);
-    let req =  claimer.send()
-    .await;
+    let req =  claimer.send().await;
     if req.is_err() {
-        if let Err(error) = req {
-            let result = error.as_decoded_error::<Revert>();
-            let result = result.map(|r|r.to_string()).unwrap_or(format!("failed to connect to blockchain, check your connection and try again"));
-            let result = Status{message: result, status: "error".to_string()};
-            return web::Json(result);
-        };
+        if let Err(error) = req{
+            let result = error.as_decoded_error::<Revert>().map(|e|e.reason).unwrap_or(format!("server is unable to connect to the blockchain"));
+            return MyResponse::<Value, Value, Value>::Error(json!({
+                "status": "error",
+                "message" : result
+            }));
+        }
     }
-    let receipt = req.unwrap().watch().await;
-    web::Json(Status{message: format!("tx_hash: {}",receipt.unwrap()), status: format!("success")})
+    
+    let receipt = req.unwrap().watch().await.unwrap();
+    MyResponse::<Value, Value, Value>::Success(json!({
+        "status" : "success",
+        "message" : receipt
+    }))
 }
 

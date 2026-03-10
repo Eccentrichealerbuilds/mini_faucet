@@ -1,30 +1,12 @@
-use alloy::{primitives::{Address, U256, address}, providers::ProviderBuilder, sol, sol_types::{RevertReason, Revert}};
-use actix_web::{HttpRequest,HttpResponse,Responder, body::BoxBody, web};
-use std::{env, string};
+use alloy::{primitives::{Uint,Address, U256, address}, providers::ProviderBuilder, sol, sol_types::{Revert}};
+use actix_web::{Responder, web};
+use std::{env};
+use serde_json::Value;
 use serde::{Serialize};
 use dotenv::dotenv;
 use chrono::{DateTime, Utc};
+use crate::blockchain::custom::MyResponse;
 
-#[derive(Serialize)]
-enum MyResponse<E,S,/*W*/>{
-    Success(S),
-    Error(E),
-    //IncorrectAddr(W)
-}
-
-impl <E,S> Responder for MyResponse<E,S>
-where 
-    E: serde::Serialize,
-    S: serde::Serialize {
-        type Body = BoxBody;
-
-        fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
-            match self {
-                MyResponse::Success(success) => HttpResponse::Ok().json(success),
-                MyResponse::Error(error) => HttpResponse::ExpectationFailed().json(error),
-            }
-        }
-    }
 
 sol! { 
     #[derive(Debug)]
@@ -46,7 +28,7 @@ pub async fn get_faucet_balance() -> impl Responder{
     if let Err(e) = get_faucet_balance {
         let error = e.as_decoded_error::<Revert>();
         let error = error.map(|r|format!("{r}")).unwrap_or(format!("server unable to connect to blockchain"));
-        let error = MyResponse::Error(error);
+        let error = MyResponse::<Uint<256, 4>,String,Value>::Error(error);
         return web::Json(error);
     } 
     let success = get_faucet_balance.ok().unwrap();
