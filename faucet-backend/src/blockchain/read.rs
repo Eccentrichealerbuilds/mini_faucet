@@ -1,14 +1,4 @@
-use alloy::{primitives::{Address, address}, providers::ProviderBuilder, sol, sol_types::{Revert}};
-use actix_web::{Responder, web};
-use std::{env};
-use serde_json::{Value, json};
-use serde::{Serialize};
-use dotenv::dotenv;
-use chrono::{DateTime, Utc};
-use crate::blockchain::custom::MyResponse;
-
-type MyResponseReturn = MyResponse<Value,Value,Value>;
-
+use crate::blockchain::imports::*;
 
 sol! { 
     #[derive(Debug)]
@@ -19,7 +9,7 @@ sol! {
         function nextClaimTime(address addy) public view returns (uint256);
     } 
 }
-#[tokio::main]
+
 pub async fn get_faucet_balance() -> impl Responder{
     dotenv().ok();
     let provider = ProviderBuilder::new().connect(&env::var("rpc_url").unwrap()).await;
@@ -41,7 +31,6 @@ pub async fn get_faucet_balance() -> impl Responder{
 }
 
 
-// #[tokio::main]
 pub async fn get_wallet_balance(address: String) -> MyResponseReturn {
     dotenv().ok();
     let recipient = address.parse::<Address>();
@@ -67,9 +56,7 @@ pub async fn get_wallet_balance(address: String) -> MyResponseReturn {
     }))
 }
 
-#[derive(Serialize)]
-struct Status{message: String, status: String}
-#[tokio::main]
+
 pub async fn next_claim(address: String) -> impl Responder {
     dotenv().ok();
     let user = address.parse::<Address>();

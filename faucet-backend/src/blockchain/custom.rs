@@ -1,7 +1,6 @@
-use actix_web::{HttpRequest, HttpResponse, body::BoxBody, Responder};
-use serde::Serialize;
+use crate::blockchain::imports::*;
 
-
+pub type MyResponseReturn = MyResponse<Value,Value,Value>;
 
 #[derive(Serialize)]
 pub enum MyResponse<S,E,IncorrectAddress>{
