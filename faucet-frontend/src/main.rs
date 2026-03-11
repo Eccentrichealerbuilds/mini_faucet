@@ -5,5 +5,11 @@ mod custom;
 use crate::imports::*;
 
 fn main() {
-    dioxus::launch(next_claim_input);
+    dioxus::launch(app);
+}
+
+fn app() -> Element {
+    rsx!{
+        Router::<Route>{}
+    }
 }
