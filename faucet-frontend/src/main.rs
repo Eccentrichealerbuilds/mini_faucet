@@ -5,5 +5,5 @@ mod custom;
 use crate::imports::*;
 
 fn main() {
-    dioxus::launch(claim_input);
+    dioxus::launch(next_claim_input);
 }
