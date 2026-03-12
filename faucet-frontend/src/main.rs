@@ -1,6 +1,6 @@
-mod imports;
 mod components;
 mod custom;
+mod imports;
 
 use crate::imports::*;
 
@@ -9,7 +9,7 @@ fn main() {
 }
 
 fn app() -> Element {
-    rsx!{
-        Router::<Route>{}
+    rsx! {
+        Router::<MyRoute>{}
     }
 }
