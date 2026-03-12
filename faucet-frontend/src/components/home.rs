@@ -13,7 +13,7 @@ pub fn Home() -> Element {
               }br {  }
               Link{ to: MyRoute::MyBalance, "check balance"} br{}br{}
               Link{to: MyRoute::FaucetBalance, "Faucet Balance"} br{}br{}
-              Link{to: MyRoute::Contribute, "Contribute"}
+              Link{to: MyRoute::Contribute, "Contribute"} 
 
          }
     }
