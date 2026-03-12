@@ -1,8 +1,11 @@
 pub use dioxus::prelude::*;
-pub use serde::{Deserialize, /*Serialize*/};
-// pub use reqwest::{get};
+pub use reqwest::get as req_get;
+pub use serde::Deserialize;
 
-pub use crate::components::{next_time::NextTime, home::Home, claim::Claim};
-pub use crate::custom::{Request, Route};
+pub use crate::components::{
+    claim::Claim, faucet_balance::FaucetBalance, home::Home, my_balance::MyBalance,
+    next_time::NextTime,
+};
+pub use crate::custom::{MyRoute, Request};
 
 // pub const WALLET_SUBMIT_CSS : Asset = asset!("assets/tailwind.css");
