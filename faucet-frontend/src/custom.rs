@@ -18,4 +18,6 @@ pub enum MyRoute {
     MyBalance,
     #[route("/faucet-balance")]
     FaucetBalance,
+    #[route("/contribute")]
+    Contribute,
 }
