@@ -1,6 +1,7 @@
 use std::io;
 mod prelude;
 mod claim;
+mod types;
 
 fn main() {
     let claimer = claim::claim();
