@@ -28,7 +28,10 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
-) -> io::Result<()> {
+) -> Result<(), Box<dyn std::error::Error>> 
+where 
+    <B as ratatui::backend::Backend>::Error: 'static 
+{
     let mut last_tick = std::time::Instant::now();
     let tick_rate = Duration::from_millis(500);
 
